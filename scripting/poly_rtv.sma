@@ -93,30 +93,34 @@ public cmdSayRTV(id)
 	new Float:vote_wait = get_pcvar_float(cvar_rtv_wait)
 	new Float:time_elapsed = get_cvar_float("mp_timelimit") - (float( get_timeleft() ) / 60.0) // Use get_gametime
 	
-	if( time_elapsed < vote_wait )
+	if( get_cvar_float("mp_timelimit") > 0 && get_cvar_float("mp_maxrounds") == 0)
 	{
-		// Can replace all this content with "You cannot RockTheVote yet."
-		// which would require no if statement or calculations.
-		
-		new Float:time_til_votebegin =  vote_wait - time_elapsed
-		if(time_til_votebegin > 1.0)
+		if( time_elapsed < vote_wait )
 		{
-			new min_to_vote = clamp(floatround(time_til_votebegin),1,floatround(vote_wait))
-			client_print(id, print_chat, "[RTV] You cannot RockTheVote for %d more minute%s.", min_to_vote, min_to_vote > 1 ? "s" : "" )
+			// Can replace all this content with "You cannot RockTheVote yet."
+			// which would require no if statement or calculations.
+
+			new Float:time_til_votebegin =  vote_wait - time_elapsed
+			if(time_til_votebegin > 1.0)
+			{
+				new min_to_vote = clamp(floatround(time_til_votebegin),1,floatround(vote_wait))
+				client_print(id, print_chat, "[RTV] You cannot RockTheVote for %d more minute%s.", min_to_vote, min_to_vote > 1 ? "s" : "" )
+			}
+			else // time_til_votebegin <= 1 minute
+			{
+				client_print(id, print_chat, "[RTV] You cannot RockTheVote for %d more seconds.", floatround(time_til_votebegin * 60) )
+			}
+
+			return PLUGIN_HANDLED
 		}
-		else // time_til_votebegin <= 1 minute
+		 
+		if(get_timeleft() < 240 ) // don't allow rtv 4 minutes before map ends
 		{
-			client_print(id, print_chat, "[RTV] You cannot RockTheVote for %d more seconds.", floatround(time_til_votebegin * 60) )
+			client_print(id, print_chat, "[RTV] Too Late to RockTheVote.")
+			return PLUGIN_HANDLED
 		}
-		
-		return PLUGIN_HANDLED
 	}
 	
-	if(get_timeleft() < 240 ) // don't allow rtv 4 minutes before map ends
-	{
-		client_print(id, print_chat, "[RTV] Too Late to RockTheVote.")
-		return PLUGIN_HANDLED
-	}
 	
 	// You (id) just voted to rock.
 	g_rockedVote[id] = true
