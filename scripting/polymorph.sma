@@ -926,7 +926,7 @@ stock bool:loadMod(szPath[], szModConfig[])
 	new f = fopen(filepath, "rt")
 
 	if(!f)
-		return loadFail(szModConfig)
+		return loadFail(szModConfig, "failed read mod's .ini file")
 
 	/* Traverse header space */
 	while(!feof(f) && szData[0] != '[')
@@ -966,7 +966,7 @@ stock bool:loadMod(szPath[], szModConfig[])
 			if( !loadMaps(szPath, value, g_iModCount) )
 			{
 				fclose(f)
-				return loadFail(szModConfig)
+				return loadFail(szModConfig, "'mapsfile' failed to load")
 			}
 		}
 	}
@@ -1016,10 +1016,10 @@ stock bool:loadMod(szPath[], szModConfig[])
 }
 
 /* Log "failed to load mod" message. return false (meaning "failed to load") */
-stock bool:loadFail(szModFile[])
+stock bool:loadFail(szModFile[], szComment[] = "")
 {
-	server_print("Failed to load mod from %s", szModFile) // Debug
-	log_amx("[Polymorph] Failed to load configuration file %s", szModFile)
+	server_print("Failed to load mod from %s (%s)", szModFile, szComment) // Debug
+	log_amx("[Polymorph] Failed to load configuration file %s (%s)", szModFile, szComment)
 	return false
 }
 
