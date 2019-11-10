@@ -79,6 +79,7 @@ new g_szThisMod[STRLEN_NAME]		// Name of 'ThisMod'
 
 new g_iThisMod = -1			// Index of 'ThisMod'
 new g_iNextMod = 0			// Index of 'NextMod'
+new g_iThisMap = -1			// Index of current map in ThisMod's map list
 new g_iModCount = 0			// Number of MODs loaded
 
 new g_iMapsPlayed			// Number of maps played on current MOD.
@@ -612,15 +613,33 @@ public startMapVote()
 	new menu[512], a, mkeys = (1<<SELECTMAPS + 1)
 
 	new pos = format(menu, 511, g_coloredMenus ? "\y%L:\w^n^n" : "%L:^n^n", LANG_SERVER, "CHOOSE_NEXTM")
-	new mapNum = g_iMapNums[g_iNextMod]
+	new mapNum = (g_iThisMod == g_iNextMod) ? g_iMapNums[g_iNextMod]-1 : g_iMapNums[g_iNextMod] // -1 to exclude current map
 	new dmax = (mapNum > SELECTMAPS) ? SELECTMAPS : mapNum
 	
+	a = -1
 	for (g_voteNum = 0; g_voteNum < dmax; ++g_voteNum)
 	{
-		a = random_num(0, mapNum - 1)
-		
-		while (isInMenu(a))
-			if (++a >= mapNum) a = 0
+		if( dmax == mapNum )
+		{
+			a++
+			if( g_iThisMod == g_iNextMod && g_iThisMap == a )
+				a++
+		}
+		else
+		{
+			a = random_num(0, mapNum - 1)
+			
+			if( g_iThisMod == g_iNextMod )
+			{
+				while (isInMenu(a) || g_iThisMap == a)
+					if (++a >= mapNum) a = 0
+			}
+			else
+			{
+				while (isInMenu(a))
+					if (++a >= mapNum) a = 0
+			}
+		}
 		
 		g_nextName[g_voteNum] = a
 		pos += format(menu[pos], 511, "%d. %a^n", g_voteNum + 1, ArrayGetStringHandle(g_aModMaps[g_iNextMod], a));
@@ -736,7 +755,7 @@ stock setDefaultNextmap()
 
 stock bool:loadMaps(szConfigDir[], szMapFile[], iModIndex)
 {
-	new szFilepath[STRLEN_PATH], szData[STRLEN_MAP]
+	new szFilepath[STRLEN_PATH], szData[STRLEN_MAP], s_iCounter = 0
 
 	g_iMapNums[iModIndex] = 0
 	formatex(szFilepath, charsmax(szFilepath), "%s/%s", szConfigDir, szMapFile)
@@ -756,6 +775,16 @@ stock bool:loadMaps(szConfigDir[], szMapFile[], iModIndex)
 		{
 			ArrayPushString(g_aModMaps[iModIndex], szData)
 			g_iMapNums[iModIndex]++
+			
+			if( g_iThisMod == iModIndex )
+			{
+				new szCurrentMap[32]; get_mapname(szCurrentMap, charsmax(szCurrentMap));
+				if( equal(szCurrentMap, szData) )
+				{
+					g_iThisMap = s_iCounter
+				}
+				s_iCounter++
+			}
 		}
 	}
 	fclose(f)
