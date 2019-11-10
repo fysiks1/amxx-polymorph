@@ -93,6 +93,8 @@ new g_nextName[SELECTMAPS]
 new g_voteMapCount[SELECTMAPS + 2]
 new g_nextModId[MODS_MAX]
 new g_voteModCount[MODS_MAX + 2]
+new bool:g_bVoteForced = false
+new bool:g_bChangeOnRoundend = false
 
 // Compatibility vars
 new g_teamScore[2]
@@ -106,6 +108,7 @@ new g_pExtendStep
 new g_pExtendMax
 new g_pThisMod
 new g_pNextMod
+new g_pEndOnRound
 
 // Existing cvars
 new g_pNextmap
@@ -136,6 +139,7 @@ public plugin_init()
 	g_pExtendMod = register_cvar("poly_extendmod", "1")
 	g_pThisMod = register_cvar("poly_thismod", "")
 	g_pNextMod = register_cvar("poly_nextmod", "")
+	g_pEndOnRound = register_cvar("poly_endonround", "0")
 	
 	/* Client Commands */
 	register_clcmd("say nextmod", "sayNextmod")
@@ -159,6 +163,16 @@ public plugin_init()
 	register_menucmd(register_menuid("Choose Nextmap:"), (-1^(-1<<(SELECTMAPS+2))), "countMapVotes")
 	register_menucmd(register_menuid("Choose Nextmod:"), (-1^(-1<<(SELECTMODS+2))), "countModVotes")
 	
+	
+	if( is_running("cstrike") )
+	{
+		register_event("HLTV", "event_round_start", "a", "1=0", "2=0")
+	}
+	else if( is_running("dod") )
+	{
+		register_event("RoundState", "event_round_start", "a", "1=1")
+	}
+
 }
 
 public plugin_cfg()
@@ -259,6 +273,15 @@ public plugin_end()
 	}
 }
 
+public event_round_start()
+{
+	if( g_bChangeOnRoundend )
+	{
+		intermission() // call end of map function whatever that might be
+	}
+}
+
+
 /*
 	Plugin Natives
 */
@@ -302,6 +325,7 @@ public _polyn_get_nextmod(iPlugin, iParams)
 public _polyn_votemod()
 {
 	startModVote()
+	g_bVoteForced = true;
 	set_task(50.0, "intermission", TASK_FORCED_MAPCHANGE)
 }
 
@@ -383,6 +407,7 @@ public cmdVoteMod(id, level, cid)
 	if( get_timeleft() > TIMELEFT_TRIGGER && !task_exists(TASK_FORCED_MAPCHANGE) )
 	{
 		startModVote()
+		g_bVoteForced = true;
 		set_task(50.0, "intermission", TASK_FORCED_MAPCHANGE)
 	}
 	else
@@ -712,6 +737,15 @@ public checkMapVotes()
 	get_pcvar_string(g_pNextmap, smap, 31)
 	client_print(0, print_chat, "%L", LANG_PLAYER, "CHO_FIN_NEXT", smap)
 	log_amx("Vote: Voting for the nextmap finished. The nextmap will be %s", smap)
+	
+	// handle "end on round" functionality here
+	if( get_pcvar_num(g_pEndOnRound) && !g_bChangeOnRoundend )
+	{
+		// extend to end of round
+		g_bChangeOnRoundend = true
+		set_pcvar_num(g_pTimeLimit, 0)
+		client_print(0, print_chat, "Last Round!  Map will change at round end.")
+	}
 }
 
 
@@ -827,12 +861,22 @@ public team_score()
 	g_teamScore[(team[0]=='C') ? 0 : 1] = read_data(2)
 }
 
-/* Show Scoreboard to everybody. */
+/* Show Scoreboard to everybody and trigger map change after the chat time. */
 public intermission()
 {
-	message_begin(MSG_ALL, SVC_INTERMISSION)
-	message_end()
-	set_task(get_pcvar_float(g_pChatTime), "changeMap")
+	if( get_pcvar_num(g_pEndOnRound) && !g_bChangeOnRoundend && !g_bVoteForced )
+	{
+		// extend to end of round
+		g_bChangeOnRoundend = true
+		set_pcvar_num(g_pTimeLimit, 0)
+		client_print(0, print_chat, "Last Round!  Map will change at round end.")
+	}
+	else
+	{
+		message_begin(MSG_ALL, SVC_INTERMISSION)
+		message_end()
+		set_task(get_pcvar_float(g_pChatTime), "changeMap")
+	}
 }
 
 /* Change map. */
