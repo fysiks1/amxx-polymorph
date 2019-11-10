@@ -800,6 +800,10 @@ stock UpdatePluginFile()
 			fputs(pMainFile, ";;;  ERROR  ;;;\r\n;;; No MODs Loaded ;;;")
 		}
 		fclose(pMainFile)
+		
+		// Execute pre-config
+		server_cmd("exec poly_preconfig%d.cfg", g_iNextMod+1)
+		
 	}
 }
 
