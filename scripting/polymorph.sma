@@ -93,6 +93,7 @@ new g_nextName[SELECTMAPS]
 new g_voteMapCount[SELECTMAPS + 2]
 new g_nextModId[MODS_MAX]
 new g_voteModCount[MODS_MAX + 2]
+new bool:g_bNextModChosen = false
 
 // Compatibility vars
 new g_teamScore[2]
@@ -399,7 +400,7 @@ public cmdVoteMod(id, level, cid)
  */
 public sayNextmod()
 {
-	client_print(0, print_chat, "Next Mod: %s", g_szModNames[g_iNextMod])
+	client_print(0, print_chat, "Next Mod: %s", ( g_isLastMap && !g_bNextModChosen && get_pcvar_num(g_pMode) == 2 ) ? "not selected yet" : g_szModNames[g_iNextMod])
 	// client_print(0, print_chat, "%L %s", LANG_PLAYER, "NEXT_MOD", g_szModNames[g_iNextMod]) // ML
 }
 
@@ -425,6 +426,7 @@ public taskEndofMap()
 		if ((c > g_teamScore[0]) && (c > g_teamScore[1]))
 		{
 			g_selected = false
+			g_bNextModChosen = false
 			return
 		}
 	}
@@ -433,6 +435,7 @@ public taskEndofMap()
 		if ((maxrounds - 2) > (g_teamScore[0] + g_teamScore[1]))
 		{
 			g_selected = false
+			g_bNextModChosen = false
 			return
 		}
 	}
@@ -443,6 +446,7 @@ public taskEndofMap()
 		if (timeleft < 1 || timeleft > TIMELEFT_TRIGGER)
 		{
 			g_selected = false
+			g_bNextModChosen = false
 			return
 		}
 	}
@@ -598,7 +602,8 @@ public checkModVotes()
 		// client_print(0, print_chat, "%L", LANG_PLAYER, "CHO_FIN_NEXT_MOD", g_szModNames[g_iNextMod]) // ML
 		log_amx("Vote: Voting for the next mod finished. The nextmod will be %s", g_szModNames[g_iNextMod])
 	}
-
+	g_bNextModChosen = true
+	
 	// Set new default map to correspond to the next mod.
 	setDefaultNextmap()
 	
