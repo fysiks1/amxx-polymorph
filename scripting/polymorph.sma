@@ -770,7 +770,9 @@ stock setDefaultNextmap()
 
 stock bool:loadMaps(szConfigDir[], szMapFile[], iModIndex)
 {
-	new szFilepath[STRLEN_PATH], szData[STRLEN_MAP]
+	new szFilepath[STRLEN_PATH], szData[STRLEN_MAP], szCurrentMap[STRLEN_MAP]
+	
+	get_mapname(szCurrentMap, charsmax(szCurrentMap))
 
 	g_iMapNums[iModIndex] = 0
 	formatex(szFilepath, charsmax(szFilepath), "%s/%s", szConfigDir, szMapFile)
@@ -786,7 +788,7 @@ stock bool:loadMaps(szConfigDir[], szMapFile[], iModIndex)
 		trim(szData)
 		if(!szData[0] || szData[0] == ';' || (szData[0] == '/' && szData[1] == '/'))
 			continue
-		if(is_map_valid(szData))
+		if( is_map_valid(szData) && !( g_iThisMod == iModIndex && equali(szData, szCurrentMap) ) )
 		{
 			ArrayPushString(g_aModMaps[iModIndex], szData)
 			g_iMapNums[iModIndex]++
