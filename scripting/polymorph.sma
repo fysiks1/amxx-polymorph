@@ -503,14 +503,14 @@ public startModVote()
 	for (g_voteNum = 0; g_voteNum < dmax; ++g_voteNum)
 	{
 		do
-			a = random(g_iModCount)
+			a++ // = random(g_iModCount)
 		while ( a == g_iThisMod || isModInMenu(a) )
 		
 		g_nextModId[g_voteNum] = a
 		pos += format(menu[pos], 511, "%d. %s^n", g_voteNum + 1, g_szModNames[a]);
 		mkeys |= (1<<g_voteNum)
 		g_voteModCount[g_voteNum] = 0
-		a++
+		// a++
 	}
 	
 	menu[pos++] = '^n'
