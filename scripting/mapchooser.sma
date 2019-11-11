@@ -9,7 +9,7 @@ native polyn_endofmap()
 
 public plugin_init()
 {
-	register_plugin("Polymorph: Mapchooser Emulator", "0.2", "Fysiks")
+	register_plugin("Nextmap Chooser", "0.3", "Polymorph")
 }
 
 // Called by gungame.
