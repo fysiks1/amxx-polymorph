@@ -12,6 +12,7 @@ native polyn_votemod()
 
 new bool:g_rockedVote[33], g_rockedVoteCnt
 new bool:g_hasbeenrocked = false
+new g_iEndOfMapRTVSuspendTime = 240  // don't allow rtv 4 minutes before map ends
 
 // Cvars
 new cvar_rtv_enabled
@@ -114,7 +115,7 @@ public cmdSayRTV(id)
 			return PLUGIN_HANDLED
 		}
 		 
-		if(get_timeleft() < 240 ) // don't allow rtv 4 minutes before map ends
+		if( get_timeleft() < g_iEndOfMapRTVSuspendTime )
 		{
 			client_print(id, print_chat, "[RTV] Too Late to RockTheVote.")
 			return PLUGIN_HANDLED
@@ -162,7 +163,7 @@ stock get_realplayersnum()
 
 rtv_remind()
 {
-	if(get_pcvar_num(cvar_rtv_show))
+	if( get_pcvar_num(cvar_rtv_show) && !(get_cvar_num("mp_timelimit") > 0 && get_cvar_num("mp_maxrounds") == 0 && get_timeleft() > g_iEndOfMapRTVSuspendTime) )
 	{  // Not tested yet.
 		client_print(0,print_chat, "[RTV] Need %d more players to RockTheVote.", get_RocksNeeded() - g_rockedVoteCnt)
 	}
