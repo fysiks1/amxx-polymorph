@@ -12,7 +12,13 @@ native polyn_votemod()
 
 new bool:g_rockedVote[33], g_rockedVoteCnt
 new bool:g_hasbeenrocked = false
-new g_iEndOfMapRTVSuspendTime = 240  // don't allow rtv 4 minutes before map ends
+new _:{
+	SUCCESSFUL = 0,
+	HASBEENROCKED,
+	ALREADYVOTED,
+	TOOEARLY,
+	TOOLATE
+}
 
 // Cvars
 new cvar_rtv_enabled
@@ -78,24 +84,21 @@ public cmdSayRTV(id)
 	if(!get_pcvar_num(cvar_rtv_enabled))
 		return PLUGIN_CONTINUE // PLUGIN_HANDLED
 	
+	new status = SUCCESSFUL
+	
 	if(g_hasbeenrocked)
 	{
-		client_print(id, print_chat, "[RTV] Vote has already been Rocked.")
-		return PLUGIN_HANDLED
+		status = HASBEENROCKED
 	}
-	
-	if(g_rockedVote[id])
+	else if(g_rockedVote[id])
 	{
-		client_print(id, print_chat, "[RTV] You already voted.")
-		rtv_remind()
-		return PLUGIN_CONTINUE  // PLUGIN_HANDLED for blind?
+		status = ALREADYVOTED
 	}
-	
-	new Float:vote_wait = get_pcvar_float(cvar_rtv_wait)
-	new Float:time_elapsed = get_cvar_float("mp_timelimit") - (float( get_timeleft() ) / 60.0) // Use get_gametime
-	
-	if( get_cvar_float("mp_timelimit") > 0 && get_cvar_float("mp_maxrounds") == 0)
+	else if( get_cvar_float("mp_timelimit") > 0 && get_cvar_float("mp_maxrounds") == 0)
 	{
+		new Float:vote_wait = get_pcvar_float(cvar_rtv_wait)
+		new Float:time_elapsed = get_cvar_float("mp_timelimit") - (float( get_timeleft() ) / 60.0) // Use get_gametime
+		
 		if( time_elapsed < vote_wait )
 		{
 			// Can replace all this content with "You cannot RockTheVote yet."
@@ -115,7 +118,7 @@ public cmdSayRTV(id)
 			return PLUGIN_HANDLED
 		}
 		 
-		if( get_timeleft() < g_iEndOfMapRTVSuspendTime )
+		if(get_timeleft() < 240 ) // don't allow rtv 4 minutes before map ends
 		{
 			client_print(id, print_chat, "[RTV] Too Late to RockTheVote.")
 			return PLUGIN_HANDLED
@@ -123,21 +126,40 @@ public cmdSayRTV(id)
 	}
 	
 	
-	// You (id) just voted to rock.
-	g_rockedVote[id] = true
-	g_rockedVoteCnt++
-	client_print(id,print_chat, "[RTV] You chose to RockTheVote")
-	
-	if( g_rockedVoteCnt >= get_RocksNeeded() ) 	// Decide if we rock the vote
+	switch(status)
 	{
-		g_hasbeenrocked = true
-		client_print(0,print_chat, "[RTV] The Vote has been Rocked!")
-		set_task(3.5,"announce_vote")
-		set_task(5.0,"startRockVote")
-	}
-	else
-	{
-		rtv_remind()
+		case SUCCESSFUL:
+		{
+			// You (id) just voted to rock.
+			g_rockedVote[id] = true
+			g_rockedVoteCnt++
+			client_print(id,print_chat, "[RTV] You chose to RockTheVote")
+			
+			if( g_rockedVoteCnt >= get_RocksNeeded() ) 	// Decide if we rock the vote
+			{
+				g_hasbeenrocked = true
+				client_print(0,print_chat, "[RTV] The Vote has been Rocked!")
+				set_task(3.5,"announce_vote")
+				set_task(5.0,"startRockVote")
+			}
+			else
+			{
+				rtv_remind()
+			}
+		}
+		case HASBEENROCKED:
+		{
+			client_print(id, print_chat, "[RTV] Vote has already been Rocked.")
+		}
+		case ALREADYVOTED:
+		{
+			client_print(id, print_chat, "[RTV] You already voted.")
+			rtv_remind()
+		}
+		default:
+		{
+			// Do nothing
+		}
 	}
 	
 	return PLUGIN_CONTINUE
@@ -163,7 +185,7 @@ stock get_realplayersnum()
 
 rtv_remind()
 {
-	if( get_pcvar_num(cvar_rtv_show) && !(get_cvar_num("mp_timelimit") > 0 && get_cvar_num("mp_maxrounds") == 0 && get_timeleft() > g_iEndOfMapRTVSuspendTime) )
+	if(get_pcvar_num(cvar_rtv_show))
 	{  // Not tested yet.
 		client_print(0,print_chat, "[RTV] Need %d more players to RockTheVote.", get_RocksNeeded() - g_rockedVoteCnt)
 	}
