@@ -719,6 +719,7 @@ public checkMapVotes()
 		client_print(0, print_chat, "%L", LANG_PLAYER, "CHO_FIN_EXT", steptime)
 		log_amx("Vote: Voting for the nextmap finished. Map %s will be extended to next %.0f minutes", mapname, steptime)
 		
+		remove_task(TASK_FORCED_MAPCHANGE)
 		return
 	}
 	
