@@ -603,7 +603,7 @@ public checkModVotes()
 			b = a
 
 	
-	if (g_voteModCount[SELECTMODS] > g_voteModCount[b] )
+	if (g_voteModCount[SELECTMODS] > g_voteModCount[b] || g_voteModCount[b] == 0)
 	{
 		setNextMod(g_iThisMod)
 		client_print(0, print_chat, "%s has been extended for one map", g_szModNames[g_iNextMod])
