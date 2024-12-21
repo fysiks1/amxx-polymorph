@@ -125,7 +125,7 @@ new const Float:fBetweenVote = 15.0 // Time between mod vote ending and map vote
 
 public plugin_init()
 {
-	register_plugin("Polymorph: Mod Manager", "1.1.2", "Fysiks")
+	register_plugin("Polymorph: Mod Manager", "1.1.3", "Fysiks")
 	register_cvar("Polymorph", "v1.1.2 by Fysiks", FCVAR_SERVER|FCVAR_SPONLY)
 	
 	register_dictionary("mapchooser.txt")
@@ -821,7 +821,7 @@ stock UpdatePluginFile()
 		
 		if( g_iModCount > 0 )
 		{
-			new iPlugins_num, szPluginName[STRLEN_NAME]
+			new iPlugins_num, szPluginName[STRLEN_PATH]
 			
 			iPlugins_num = ArraySize(g_aModPlugins[g_iNextMod])
 				
@@ -917,7 +917,7 @@ stock initModLoad()
 			if( 47 < filename[0] < 58 )
 			{
 				g_aModMaps[g_iModCount] = ArrayCreate(STRLEN_FILE)
-				g_aModPlugins[g_iModCount] = ArrayCreate(STRLEN_FILE)
+				g_aModPlugins[g_iModCount] = ArrayCreate(STRLEN_PATH)
 				if( loadMod(szFilepath, filename) )
 				{
 					server_print("MOD LOADED: %s %s", g_szModNames[g_iModCount], g_iThisMod == g_iModCount ? "<<<<<" : "") // Debug
